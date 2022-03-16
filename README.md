@@ -32,7 +32,7 @@ The configuration file is a JSON file that supports comments.
 
 An array of paths to the `.csproj` files you want to generate documentation for.
 
-```json
+```jsonc
 "projects": [
     "../YarnSpinner/YarnSpinner/YarnSpinner.csproj",
     "../YarnSpinner/YarnSpinner.Compiler/YarnSpinner.Compiler.csproj",
@@ -44,7 +44,7 @@ An array of paths to the `.csproj` files you want to generate documentation for.
 
 An array of regular expressions. Any symbols in the source code that match any of these expressions will not be included in the documentation.
 
-```json
+```jsonc
 "excludeRegexes": [
     // Exclude certain namespaces that aren't intended for public consumption
     "^Yarn\\.Analysis",
@@ -63,7 +63,7 @@ A string. Valid values are `html` or `markdown`. Specifies the output format for
 * `html` mode will generate a single HTML file containing the documentation.
 * `markdown` mode will generate a markdown file for each symbol, as well as a `SUMMARY.md` file that contains a table of contents. The generated markdown is designed to be used by GitBook, but other platforms can make use of it as well.
 
-```json
+```jsonc
 "outputFormat": "markdown"
 ```
 
@@ -71,7 +71,7 @@ A string. Valid values are `html` or `markdown`. Specifies the output format for
 
 A string containing the path to the folder that the generated source code should be placed.
 
-```json
+```jsonc
 "outputFolder": "/Users/desplesda/Work/YSDocs/api/csharp/"
 ```
 
@@ -79,7 +79,7 @@ A string containing the path to the folder that the generated source code should
 
 (Only used in Markdown mode). A string containing a prefix to use for all inter-document links.
 
-```json
+```jsonc
 "pathPrefix": "/api/csharp"
 ```
 
@@ -87,7 +87,7 @@ A string containing the path to the folder that the generated source code should
 
 A dictionary mapping the symbol names of namespaces to descriptions of those namespaces. (This is specified in this configuration file because C# doesn't have a way to associate XML documentation comments with namespaces.)
 
-```json
+```jsonc
 "namespaceSummaries": {
     "Yarn": "Contains classes for working with compiled Yarn programs.",
     "Yarn.Markup": "Contains classes for working with markup in Yarn lines.",
@@ -99,7 +99,7 @@ A dictionary mapping the symbol names of namespaces to descriptions of those nam
 
 An array of strings containing preprocessor definitions. These symbols will be defined during DocExtractor's compilation of the source code.
 
-```json
+```jsonc
 "preprocessorSymbols": [
     "USE_INPUTSYSTEM",
     "ENABLE_INPUT_SYSTEM",
@@ -112,6 +112,6 @@ An array of strings containing preprocessor definitions. These symbols will be d
 
 A string containing the path to MSBuild. If this is null, DocExtractor will attempt to locate MSBuild on the system automatically.
 
-```json
+```jsonc
 "msBuildPath": "/usr/local/share/dotnet/x64/sdk/5.0.404"
 ```
