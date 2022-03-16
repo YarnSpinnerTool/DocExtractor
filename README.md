@@ -4,7 +4,7 @@ DocExtractor is a tool that reads C# source code, extracts documentation from it
 
 DocExtractor uses Roslyn to read the source code, and performs a _partial compilation_ of your source code. DocExtractor is thus able to build documentation even when the project doesn't fully build; for example, if your source code contains errors, or references to assemblies that you don't have, then DocExtractor will still be able to produce useful output.
 
-DocExtractor is **not an officially supported Yarn Spinner project**. We use it internally, but we can't offer any support for its use. In particular, our current focus is on producing Markdown content for GitBook sites; other use cases are less maintained.
+DocExtractor is **not an officially supported Yarn Spinner project**. We use it internally, but we don't offer any support for its use. In particular, our current focus is on producing Markdown content for GitBook sites; other use cases are less maintained.
 
 ## Usage
 
