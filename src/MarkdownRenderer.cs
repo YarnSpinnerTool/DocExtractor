@@ -7,7 +7,7 @@ namespace DocExtractor
 {
     public static class MarkdownRenderer
     {
-        public static string GenerateMarkdownTableOfContentsForDocXML(IEnumerable<DocumentedSymbol> documentedSymbols, string pathPrefix)
+        public static string GenerateMarkdownTableOfContentsForDocXML(IEnumerable<DocumentedSymbol> documentedSymbols, string pathPrefix, int indentLevel)
         {
             var symbolDict = RendererUtility.CreateSymbolDictionary(documentedSymbols);
 
@@ -21,9 +21,13 @@ namespace DocExtractor
 
                 label = EscapeMarkdownCharacters(label);
 
-                var path = $"{label}]({pathPrefix}/{symbol.AnchorName}.md";
+                var pathPrefixWithoutLeadingSlash = pathPrefix.TrimStart('/');
 
-                return $"{new string(' ', level * 2)}* [{path})";
+                var path = $"{label}]({pathPrefixWithoutLeadingSlash}/{symbol.AnchorName}.md";
+
+                var indent = new string(' ', indentLevel);
+
+                return $"{indent}{new string(' ', level * 2)}* [{path})";
             }
 
             var linkStack = new Stack<(DocumentedSymbol Symbol, int Level)>();

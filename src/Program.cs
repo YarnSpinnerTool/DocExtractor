@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -207,7 +207,7 @@ namespace DocExtractor
                             Console.WriteLine(path);
                         }
 
-                        var summary = MarkdownRenderer.GenerateMarkdownTableOfContentsForDocXML(documentedSymbols, configuration.PathPrefix);
+                        var summary = MarkdownRenderer.GenerateMarkdownTableOfContentsForDocXML(documentedSymbols, configuration.PathPrefix, configuration.SummaryIndentLevel);
 
                         var summaryPath = Path.Join(configuration.OutputFolder, "SUMMARY.md");
                         File.WriteAllText(summaryPath, summary);
