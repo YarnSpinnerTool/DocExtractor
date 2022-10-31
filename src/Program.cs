@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -222,12 +222,14 @@ namespace DocExtractor
                         int undocumentedCount = symbolsWithUndocumentedElements.Count();
                         int documentedCount = documentedSymbols.Count();
 
+                        float undocumentedFraction = 1f - ((float)undocumentedCount / (float)documentedCount);
+
                         undocumentedSB
                             .Append(undocumentedCount)
                             .Append(" items without documentation (of ")
                             .Append(documentedCount)
                             .Append(" total; ")
-                            .AppendFormat("{0:F0}", (float)undocumentedCount / (float)documentedCount * 100f)
+                            .AppendFormat("{0:F0}", undocumentedFraction  * 100f)
                             .AppendLine("% documented).");
                             
                         undocumentedSB.AppendLine();
