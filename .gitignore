@@ -53,3 +53,6 @@ msbuild.wrn
 ### Configurations
 
 /*.json
+
+### .NET traces
+*.nettrace
