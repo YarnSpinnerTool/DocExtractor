@@ -148,11 +148,26 @@ namespace DocExtractor
                     stringBuilder.AppendLine();
                 }
 
-                var isObsolete = symbol.Symbol.GetAttributes().Any(a => a.AttributeClass.GetDocumentationCommentId() == "T:System.ObsoleteAttribute");
+                var obsoleteAttribute = symbol.Symbol.GetAttributes().FirstOrDefault(a => a.AttributeClass.GetDocumentationCommentId() == "T:System.ObsoleteAttribute");
 
-                if (isObsolete)
+                if (obsoleteAttribute != null)
                 {
-                    stringBuilder.AppendLine(CreateCallout("warning", $"This {typeName?.ToLowerInvariant() ?? "item"} is <b>obsolete</b> and may be removed from a future version of Yarn Spinner."));
+                    var message = new System.Text.StringBuilder();
+
+                    message.Append($"This {typeName?.ToLowerInvariant() ?? "item"} is <b>obsolete</b> and may be removed from a future version of Yarn Spinner");
+
+                    if (obsoleteAttribute.ConstructorArguments.Length > 0)
+                    {
+                        string reason = obsoleteAttribute.ConstructorArguments[0].Value.ToString();
+                        message.Append(": " + reason);
+                    }
+
+                    if (message.ToString().EndsWith('.') == false)
+                    {
+                        message.Append('.');
+                    }
+
+                    stringBuilder.AppendLine(CreateCallout("warning", message.ToString()));
                     stringBuilder.AppendLine();
                 }
 
