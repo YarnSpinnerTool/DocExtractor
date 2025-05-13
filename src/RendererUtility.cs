@@ -3,7 +3,8 @@ using System.Linq;
 
 namespace DocExtractor
 {
-    internal static class RendererUtility {
+    internal static class RendererUtility
+    {
         private static readonly Dictionary<string, string> KnownTypes = new Dictionary<string, string>
         {
             {"System.String", "string"},
@@ -33,11 +34,12 @@ namespace DocExtractor
                     DocumentationXml = $@"<member name=""{key}""><summary></summary></member>",
                 };
 
-                if (KnownTypes.TryGetValue(documentedSymbol.DisplayName, out var knownName)) {
+                if (KnownTypes.TryGetValue(documentedSymbol.DisplayName, out var knownName))
+                {
                     documentedSymbol.DisplayName = knownName;
                 }
 
-                
+
                 return documentedSymbol;
             },
             (key) =>

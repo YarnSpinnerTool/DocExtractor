@@ -11,9 +11,8 @@ namespace DocExtractor
     /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
     /// <inheritdoc/>
-    internal class DefaultDictionary<TKey, TValue> : IDictionary<TKey, TValue> {
-        
-
+    internal class DefaultDictionary<TKey, TValue> : IDictionary<TKey, TValue>
+    {
         private Dictionary<TKey, TValue> _storage = new Dictionary<TKey, TValue>();
 
         public delegate TValue FallbackValueProvider(TKey key);
@@ -46,7 +45,8 @@ namespace DocExtractor
         /// </summary>
         /// <param name="fallbackProvider"><inheritdoc cref="DefaultDictionary(FallbackValueProvider)" path="/param[@name='valueFactory']/node()" /></param>
         /// <param name="sourceDictionary"></param>
-        public DefaultDictionary(Dictionary<TKey, TValue> sourceDictionary, FallbackValueProvider fallbackProvider, AlternativeKeyProvider alternativeKeyProvider = null) {
+        public DefaultDictionary(Dictionary<TKey, TValue> sourceDictionary, FallbackValueProvider fallbackProvider, AlternativeKeyProvider alternativeKeyProvider = null)
+        {
             this.fallbackProvider = fallbackProvider;
             this.alternativeKeyProvider = alternativeKeyProvider;
             _storage = sourceDictionary;
@@ -71,7 +71,8 @@ namespace DocExtractor
                     }
 
                     // If we got one, try and fetch _that_ from the dictionary.
-                    if (_storage.ContainsKey(key)) {
+                    if (_storage.ContainsKey(key))
+                    {
                         // If we contain a value for the alternate key, use that
                         // directly
                         return ((IDictionary<TKey, TValue>)_storage)[key];
@@ -80,9 +81,12 @@ namespace DocExtractor
                 }
 
                 // Get a value for this key from the fallback provider.
-                if (fallbackProvider != null) {
+                if (fallbackProvider != null)
+                {
                     return fallbackProvider(key);
-                } else {
+                }
+                else
+                {
                     // We tried everything we could! Throw a 'not found'
                     // exception.
                     throw new KeyNotFoundException(key.ToString());
@@ -125,7 +129,7 @@ namespace DocExtractor
             // Return true if we have a value for this key; if it doesn't, and
             // we have an alternative key provider, return true if we have a
             // value for the alternative key.
-            return ((IDictionary<TKey, TValue>)_storage).ContainsKey(key) || (alternativeKeyProvider != null && _storage.ContainsKey( alternativeKeyProvider(key)));
+            return ((IDictionary<TKey, TValue>)_storage).ContainsKey(key) || (alternativeKeyProvider != null && _storage.ContainsKey(alternativeKeyProvider(key)));
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)

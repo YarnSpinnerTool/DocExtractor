@@ -229,9 +229,9 @@ namespace DocExtractor
                             .Append(" items without documentation (of ")
                             .Append(documentedCount)
                             .Append(" total; ")
-                            .AppendFormat("{0:F0}", undocumentedFraction  * 100f)
+                            .AppendFormat("{0:F0}", undocumentedFraction * 100f)
                             .AppendLine("% documented).");
-                            
+
                         undocumentedSB.AppendLine();
                         foreach (var symbol in symbolsWithUndocumentedElements)
                         {
@@ -262,7 +262,7 @@ namespace DocExtractor
                     .WithPreprocessorSymbols(configuration.PreprocessorSymbols)
                 )
                 .GetCompilationAsync().Result as CSharpCompilation;
-            
+
             var output = new List<DocumentedSymbol>();
 
             var excludeRegexes = configuration.ExcludeRegexes.Select(regexText => new System.Text.RegularExpressions.Regex(regexText));

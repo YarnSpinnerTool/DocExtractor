@@ -19,7 +19,7 @@ namespace DocExtractor
         public static IEnumerable<ISymbol> GetAllSymbols(SemanticModel model, SyntaxNode root)
         {
             var noDuplicates = new HashSet<ISymbol>();
-            
+
             foreach (var node in root.DescendantNodesAndSelf())
             {
                 switch (node.Kind())
@@ -247,7 +247,7 @@ namespace DocExtractor
             else
             {
                 var crefValue = crefAttribute.Value;
-                
+
                 symbol = FindSymbolForDeclarationId(crefValue, compilation as CSharpCompilation);
                 if (symbol is null)
                 {
@@ -272,7 +272,8 @@ namespace DocExtractor
 
                 var document = XDocument.Parse(inheritedDocumentation);
 
-                foreach (var inheritedElement in document.Elements()) {
+                foreach (var inheritedElement in document.Elements())
+                {
                     inheritedElement.SetAttributeValue("inheritedFrom", symbol.GetDocumentationCommentId());
                 }
 

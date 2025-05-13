@@ -43,8 +43,6 @@ namespace DocExtractor
                     new XElement("dd",
                         CreateHTMLFromXMLTags(XElement.Parse(member.DocumentationXml).Element("summary"), symbolDict, ReferenceToAnchor).Nodes()
                     )
-
-                    
                 );
             }
 
@@ -76,7 +74,7 @@ namespace DocExtractor
 
             return new XElement("html",
                 headElem,
-                new XElement("body", 
+                new XElement("body",
                     contentsElem
                 )
             );
@@ -243,10 +241,13 @@ namespace DocExtractor
             switch (member.Syntax)
             {
                 case ClassDeclarationSyntax:
-                    if (member.BaseTypeID?.Substring(1).Equals(":System.Attribute") ?? false) {
+                    if (member.BaseTypeID?.Substring(1).Equals(":System.Attribute") ?? false)
+                    {
                         // This is an attribute!
                         return plural ? "Attributes" : "Attribute";
-                    } else {
+                    }
+                    else
+                    {
                         return plural ? "Classes" : "Class";
                     }
 
@@ -497,12 +498,13 @@ namespace DocExtractor
         /// </summary>
         /// <param name="input">The input XML.</param>
         /// <returns>An HTML version of <paramref name="input"/>.</returns>
-        public static XElement CreateHTMLFromXMLTags(XElement input, IDictionary<string, DocumentedSymbol> symbols, System.Func<string,string> anchorReferenceHandler)
+        public static XElement CreateHTMLFromXMLTags(XElement input, IDictionary<string, DocumentedSymbol> symbols, System.Func<string, string> anchorReferenceHandler)
         {
             XElement output = new XElement(input);
 
             // Replace all CDATA with HTML-encoded versions of the same content
-            foreach (var cData in output.Descendants().OfType<XCData>().ToList()) {
+            foreach (var cData in output.Descendants().OfType<XCData>().ToList())
+            {
                 cData.ReplaceWith(System.Web.HttpUtility.HtmlEncode(cData.Value));
             }
 

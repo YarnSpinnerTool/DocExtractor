@@ -5,7 +5,8 @@ using Microsoft.CodeAnalysis;
 
 namespace DocExtractor
 {
-    public static class Extensions {
+    public static class Extensions
+    {
         public static ImmutableArray<ISymbol> ExplicitOrImplicitInterfaceImplementations(this ISymbol symbol)
         {
             if (symbol.Kind is not SymbolKind.Method and not SymbolKind.Property and not SymbolKind.Event)
@@ -23,7 +24,7 @@ namespace DocExtractor
         public static ImmutableArray<ITypeParameterSymbol> GetAllTypeParameters(this ISymbol? symbol)
         {
             List<ITypeParameterSymbol> results = new List<ITypeParameterSymbol>();
-            
+
             while (symbol != null)
             {
                 results.AddRange(symbol.GetTypeParameters());

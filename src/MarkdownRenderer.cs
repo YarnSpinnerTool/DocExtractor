@@ -313,7 +313,7 @@ namespace DocExtractor
                 var children = symbolDict
                     .Values
                     .Where(s => s.ContainerID == symbol.DocumentationID)
-                    .GroupBy(s => (HTMLRenderer.GetTypeName(s, plural: true)))  ;
+                    .GroupBy(s => (HTMLRenderer.GetTypeName(s, plural: true)));
 
                 if (children.Any())
                 {
@@ -402,9 +402,12 @@ namespace DocExtractor
             IEnumerable<XNode> htmlNodes = HTMLRenderer.CreateHTMLFromXMLTags(element, symbolDict, (anchor) => anchor + ".md").Nodes();
 
             // Replace all <p style="x"> nodes with GitBook-style Hint blocks
-            foreach (var node in htmlNodes) {
-                if (node is XElement ele) {
-                    foreach (var styledPTag in ele.DescendantsAndSelf("p").Where(e => e.Attribute("style") != null).ToList()) {
+            foreach (var node in htmlNodes)
+            {
+                if (node is XElement ele)
+                {
+                    foreach (var styledPTag in ele.DescendantsAndSelf("p").Where(e => e.Attribute("style") != null).ToList())
+                    {
                         // Get the style attribute's value
                         XAttribute styleAttribute = styledPTag.Attribute("style");
                         var style = styleAttribute.Value;
