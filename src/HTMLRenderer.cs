@@ -503,7 +503,7 @@ namespace DocExtractor
             XElement output = new XElement(input);
 
             // Replace all CDATA with HTML-encoded versions of the same content
-            foreach (var cData in output.Descendants().OfType<XCData>().ToList())
+            foreach (var cData in output.Descendants().OfType<XNode>().OfType<XCData>().ToList())
             {
                 cData.ReplaceWith(System.Web.HttpUtility.HtmlEncode(cData.Value));
             }
