@@ -399,6 +399,11 @@ namespace DocExtractor
                     case MethodDeclarationSyntax method:
                         name = method.Identifier.ValueText;
 
+                        if (method.TypeParameterList != null && method.TypeParameterList.Parameters.Count > 0)
+                        {
+                            name += "<" + string.Join(", ", method.TypeParameterList.Parameters.Select(t => t.Identifier)) + ">";
+                        }
+
                         name += "(";
 
                         name += string.Join(",", method.ParameterList.Parameters.Select(p => p.Type.ToString()));
@@ -449,6 +454,12 @@ namespace DocExtractor
                         break;
                     case ClassDeclarationSyntax @class:
                         name = @class.Identifier.ValueText;
+
+                        if (@class.TypeParameterList != null && @class.TypeParameterList.Parameters.Count > 0)
+                        {
+                            name += "<" + string.Join(", ", @class.TypeParameterList.Parameters.Select(t => t.Identifier)) + ">";
+                        }
+
                         declarationSyntax = @class
                             .WithMembers(emptyMemberList)
                             .WithAttributeLists(emptyAttributeList)
@@ -460,6 +471,12 @@ namespace DocExtractor
                         break;
                     case StructDeclarationSyntax @struct:
                         name = @struct.Identifier.ValueText;
+
+                        if (@struct.TypeParameterList != null && @struct.TypeParameterList.Parameters.Count > 0)
+                        {
+                            name += "<" + string.Join(", ", @struct.TypeParameterList.Parameters.Select(t => t.Identifier)) + ">";
+                        }
+
                         declarationSyntax = @struct
                             .WithMembers(emptyMemberList)
                             .WithAttributeLists(emptyAttributeList)
