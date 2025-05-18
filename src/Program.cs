@@ -442,7 +442,8 @@ namespace DocExtractor
                             .WithInitializer(null)
                             .WithExpressionBody(null)
                             .WithAttributeLists(emptyAttributeList)
-                            .WithAccessorList(accessorList);
+                            .WithAccessorList(accessorList)
+                            .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.None));
 
                         break;
                     case ClassDeclarationSyntax @class:
@@ -576,7 +577,7 @@ namespace DocExtractor
                     declarationSyntax = Formatter.Format(declarationSyntax, workspace);
                 }
 
-                symbol.Declaration = declarationSyntax?.ToString().Trim() ?? "(no declaration available)";
+                symbol.Declaration = declarationSyntax?.NormalizeWhitespace().ToString().Trim() ?? "(no declaration available)";
             }
 
             // We may have symbols with the same anchor (due to overloads,
