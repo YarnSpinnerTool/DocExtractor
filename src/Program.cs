@@ -207,7 +207,7 @@ namespace DocExtractor
                             Console.WriteLine(path);
                         }
 
-                        var summary = MarkdownRenderer.GenerateMarkdownTableOfContentsForDocXML(documentedSymbols, configuration.PathPrefix, configuration.SummaryIndentLevel);
+                        var summary = MarkdownRenderer.GenerateMarkdownTableOfContentsForDocXML(documentedSymbols, configuration.TocPathPrefix, configuration.SummaryIndentLevel);
 
                         var summaryPath = Path.Join(configuration.OutputFolder, "SUMMARY.md");
                         File.WriteAllText(summaryPath, summary);

@@ -11,6 +11,8 @@ namespace DocExtractor
         public OutputFormat OutputFormat { get; set; } = OutputFormat.HTML;
         public string OutputFolder { get; set; } = null;
         public string PathPrefix { get; set; } = ".";
+        public string TocPathPrefix { get; set; } = ".";
+
         public Dictionary<string, string> NamespaceSummaries { get; set; } = null;
 
         /// <summary>
