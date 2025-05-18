@@ -428,6 +428,7 @@ namespace DocExtractor
                                 .WithBody(null)
                                 .WithExpressionBody(null)
                                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                                .WithAttributeLists(emptyAttributeList)
                             );
 
                         if (accessors == null || accessors.Count() == 0)
