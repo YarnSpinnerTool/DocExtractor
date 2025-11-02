@@ -306,7 +306,7 @@ namespace DocExtractor
                     if (node is NamespaceDeclarationSyntax)
                     {
                         // If this symbol is a namespace, it won't have any documentation comments. We'll create one.
-                        if (configuration.NamespaceSummaries.TryGetValue(symbol.ToDisplayString(), out var summary))
+                        if (configuration.NamespaceSummaries != null && configuration.NamespaceSummaries.TryGetValue(symbol.ToDisplayString(), out var summary))
                         {
                             doc = "<doc><summary>" + summary + "</summary></doc>";
                         }
