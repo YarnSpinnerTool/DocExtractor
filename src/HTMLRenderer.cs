@@ -4,6 +4,8 @@ using System.Xml.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text.RegularExpressions;
 
+#nullable enable
+
 namespace DocExtractor
 {
     public static class HTMLRenderer
@@ -449,7 +451,7 @@ namespace DocExtractor
             }
 
             var exceptions = symbolDoc.Elements("except");
-            if (exceptions.Count() > 0)
+            if (exceptions.Any())
             {
                 symbolElem.Add(new XElement("section",
                     new XAttribute("class", "except"),
@@ -522,7 +524,7 @@ namespace DocExtractor
             foreach (var see in output.Descendants("see").Where(n => n.Attribute("langword") != null))
             {
                 see.Name = "code";
-                see.Add(see.Attribute("langword").Value);
+                see.Add(see.Attribute("langword")?.Value);
                 see.RemoveAttributes();
             }
 

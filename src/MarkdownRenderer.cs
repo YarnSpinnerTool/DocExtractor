@@ -440,6 +440,25 @@ namespace DocExtractor
 
             string value = string.Join(" ", htmlNodes.Select(s => s.ToString()));
 
+            System.Text.RegularExpressions.Regex newLineFollowedByText = new(@"\\n([^\\n\\s])", System.Text.RegularExpressions.RegexOptions.Multiline);
+            value = newLineFollowedByText.Replace(value, (match) =>
+            {
+                return " " + match.Groups[1].Value;
+            });
+
+
+            // System.Text.RegularExpressions.Regex linkRegex = new(@"<a\s+href=""(.*)"">(.*)<\/a>");
+
+            // value = linkRegex.Replace(value, (match) =>
+            // {
+            //     var link = match.Groups[1].Value;
+            //     var text = match.Groups[2].Value;
+            //     return $"[{text}]({link})";
+            // });
+
+            // value = value.Replace("<code>", "`");
+            // value = value.Replace("</code>", "`");
+
             // Strip leading whitespace from lines
             return EscapeMarkdown(value);
         }

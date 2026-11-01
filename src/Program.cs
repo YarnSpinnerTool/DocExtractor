@@ -17,12 +17,13 @@ using System.CommandLine.Invocation;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Nodes;
 
 namespace DocExtractor
 {
     enum OutputFormat
     {
-        HTML, Markdown, XML
+        HTML, Markdown, XML, JSON
     }
 
     class Program
@@ -195,6 +196,37 @@ namespace DocExtractor
                         Console.WriteLine(xml.ToString());
                         break;
                     }
+                case OutputFormat.JSON:
+                    {
+                        var documentedSymbols = assemblySymbols.SelectMany(kv => kv.Value);
+                        var symbolDict = RendererUtility.CreateSymbolDictionary(documentedSymbols);
+
+                        var files = JSONRenderer.GenerateJSONForDocXML(documentedSymbols, symbolDict);
+
+                        foreach (var file in files)
+                        {
+                            var path = Path.Join(configuration.OutputFolder, file.Name);
+                            File.WriteAllText(path, file.Contents);
+                            Console.WriteLine(path);
+                        }
+
+
+                        var indexNode = new JsonObject();
+
+                        foreach (var f in files.OrderBy(f => f.DocumentationID))
+                        {
+                            indexNode.Add(f.DocumentationID, f.Name);
+                        }
+
+                        var indexPath = Path.Join(configuration.OutputFolder, "index.json");
+                        File.WriteAllText(indexPath, JsonSerializer.Serialize(indexNode, new JsonSerializerOptions
+                        {
+                            WriteIndented = true,
+                        }));
+                        Console.WriteLine(indexPath);
+                        break;
+                    }
+
                 case OutputFormat.Markdown:
                     {
                         IEnumerable<DocumentedSymbol> documentedSymbols = assemblySymbols.SelectMany(kv => kv.Value);
