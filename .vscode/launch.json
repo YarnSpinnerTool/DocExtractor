@@ -10,11 +10,13 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/bin/Debug/net5.0/DocExtractor.dll",
+            "program": "${workspaceFolder}/src/bin/Debug/net10.0/DocExtractor.dll",
             // "args": ["--project-file", "${workspaceFolder}/input/TestProject/TestProject.csproj"],
             // "args": ["--project-file", "${workspaceFolder}/../RevenantGrove/YarnQuests.csproj"],
-            "args": ["build", "${workspaceFolder}/YarnSpinnerDocs.json"],
-            
+            "args": [
+                "build",
+                "${workspaceFolder}/YarnSpinnerDocs.json"
+            ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",

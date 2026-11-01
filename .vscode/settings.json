@@ -1,4 +1,5 @@
 {
     "omnisharp.useGlobalMono": "never",
-    "omnisharp.useModernNet": true
+    "omnisharp.useModernNet": true,
+    "dotnet.defaultSolution": "DocExtractor.sln"
 }
