@@ -233,8 +233,10 @@ namespace DocExtractor
 
                         var outputDataNode = JsonSerializer.SerializeToNode(outputData, JSONRenderer.SerializerOptions) as JsonObject;
 
+                        const string APIDocsSchemaFileName = "APIDocs.schema.json";
+
                         outputDataNode["documentedSymbols"] = outputDataNode["documentedSymbols"].WithSortedKeys();
-                        outputDataNode.Insert(0, "$schema", "./APIDocs.schema.json");
+                        outputDataNode.Insert(0, "$schema", "./" + APIDocsSchemaFileName);
 
                         var outputJSON = JsonSerializer.Serialize(outputDataNode, JSONRenderer.SerializerOptions);
                         var outputPath = Path.Join(configuration.OutputFolder, $"{configuration.Name ?? "api"}-{EngineName}-{Version}.json");
@@ -276,10 +278,10 @@ namespace DocExtractor
                                 return schema;
                             }
                         });
-                        var schemaPath = Path.Join(configuration.OutputFolder, "APIDocs.schema.json");
+
+                        var schemaPath = Path.Join(configuration.OutputFolder, APIDocsSchemaFileName);
                         File.WriteAllText(schemaPath, JsonSerializer.Serialize(schemaNode, JSONRenderer.SerializerOptions));
                         Console.WriteLine(schemaPath);
-
 
                         break;
                     }
