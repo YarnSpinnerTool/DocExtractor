@@ -21,6 +21,10 @@ namespace DocExtractor
 
             [Description("The version of this API")]
             public required string Version { get; set; }
+
+            [Description("The git SHAs of the projects used to compile this documentation")]
+            public Dictionary<string, string> ProjectVersions { get; set; } = [];
+
             [Description("The documented API items")]
             public Dictionary<string, DocumentationPageData> DocumentedSymbols { get; set; } = [];
         }

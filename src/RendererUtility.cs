@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -70,6 +71,34 @@ namespace DocExtractor
             return symbol is IMethodSymbol methodSymbol
                 ? methodSymbol.ReturnType
                 : null;
+        }
+
+        public static string GetGitSha(string repoPath)
+        {
+            const string UnknownResult = "<UNKNOWN>";
+
+
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = $"-C \"{repoPath}\" log -1 --pretty=format:%H",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+
+            if (process == null)
+            {
+                return UnknownResult;
+            }
+
+            string output = process.StandardOutput.ReadToEnd().Trim();
+            process.WaitForExit();
+
+            return process.ExitCode == 0
+                ? output
+                : UnknownResult;
         }
 
     }

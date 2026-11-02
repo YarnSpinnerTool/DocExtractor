@@ -223,6 +223,14 @@ namespace DocExtractor
                         const string EngineName = "Unity";
                         var outputData = JSONRenderer.GenerateJSONForDocXML(EngineName, Version, documentedSymbols, symbolDict);
 
+                        foreach (var path in projectFiles)
+                        {
+                            var fileName = Path.GetFileName(path);
+                            var dirName = Path.GetDirectoryName(path);
+                            var sha = RendererUtility.GetGitSha(dirName);
+                            outputData.ProjectVersions.Add(fileName, sha);
+                        }
+
                         var outputDataNode = JsonSerializer.SerializeToNode(outputData, JSONRenderer.SerializerOptions) as JsonObject;
 
                         outputDataNode["documentedSymbols"] = outputDataNode["documentedSymbols"].WithSortedKeys();
