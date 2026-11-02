@@ -287,7 +287,24 @@ namespace DocExtractor
                         })
                     ],
 
-                    // TODO: seealso
+                    SeeAlso = [
+                        ..xml.Elements("seealso").Select(seeAlsoNode => {
+                            if (seeAlsoNode.Attribute("href") is XAttribute hrefNode) {
+                                return new DocumentationPageData.SeeAlsoInfo {
+                                    URL = hrefNode.Value
+                                };
+                            } else if (seeAlsoNode.Attribute("cref") is XAttribute crefNode) {
+                                var seeAlsoSymbol = symbolDict[crefNode.Value.ToString()];
+                                return new DocumentationPageData.SeeAlsoInfo {
+                                    TypeID = seeAlsoSymbol.DocumentationID
+                                };
+                            } else {
+                                return  new DocumentationPageData.SeeAlsoInfo {
+                                    TypeID = "!:Unknown"
+                                };
+                            }
+                        })
+                    ]
                 };
 
                 output.DocumentedSymbols.Add(
