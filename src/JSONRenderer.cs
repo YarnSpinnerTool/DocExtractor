@@ -311,7 +311,7 @@ namespace DocExtractor
                     ]
                 };
 
-                output.DocumentedSymbols.Add(
+                output.DocumentedSymbols.TryAdd(
                     symbol.DocumentationID,
                     data
                 );
