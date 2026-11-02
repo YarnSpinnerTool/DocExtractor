@@ -286,6 +286,9 @@ namespace DocExtractor
                 case NamespaceDeclarationSyntax:
                     return plural ? "Namespaces" : "Namespace";
 
+                case OperatorDeclarationSyntax:
+                    return plural ? "Operators" : "Operator";
+
                 default:
                     return plural ? "TYPENAME_UNKNOWN_PLURAL" : "TYPENAME_UNKNOWN";
             }
