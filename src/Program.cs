@@ -121,6 +121,8 @@ namespace DocExtractor
 
             var assemblySymbols = new Dictionary<string, List<DocumentedSymbol>>();
 
+            List<Compilation> compilations = [];
+
             foreach (var path in projectFiles)
             {
                 if (File.Exists(path) == false)
@@ -147,9 +149,11 @@ namespace DocExtractor
                     return;
                 }
 
-                var thisProjectSymbols = GenerateDocumentedSymbols(project, configuration).ToList();
+                GenerateDocumentedSymbols(project, configuration, out var symbols, out var compilation);
 
-                assemblySymbols[project.AssemblyName] = thisProjectSymbols;
+                compilations.Add(compilation);
+
+                assemblySymbols[project.AssemblyName] = [.. symbols];
             }
 
             switch (configuration.OutputFormat)
@@ -294,9 +298,9 @@ namespace DocExtractor
             }
         }
 
-        private static IEnumerable<DocumentedSymbol> GenerateDocumentedSymbols(Project project, Configuration configuration)
+        private static void GenerateDocumentedSymbols(Project project, Configuration configuration, out IEnumerable<DocumentedSymbol> symbols, out Compilation compilation)
         {
-            var compilation = project
+            var theCompilation = project
                 .WithParseOptions(
                     CSharpParseOptions.Default
                     .WithPreprocessorSymbols(configuration.PreprocessorSymbols)
@@ -309,9 +313,9 @@ namespace DocExtractor
 
             var workspace = new AdhocWorkspace();
 
-            foreach (var tree in compilation.SyntaxTrees)
+            foreach (var tree in theCompilation.SyntaxTrees)
             {
-                SemanticModel model = compilation.GetSemanticModel(tree, true);
+                SemanticModel model = theCompilation.GetSemanticModel(tree, true);
 
                 var walker = new DeclarationWalker(model, (node, symbol) =>
                 {
@@ -339,7 +343,7 @@ namespace DocExtractor
                     string doc = string.Empty;
                     if (symbol.GetDocumentationCommentXml() != null)
                     {
-                        doc = DocumentationCommentExtractor.GetDocumentationComment(symbol, null, compilation, null, true, true);
+                        doc = DocumentationCommentExtractor.GetDocumentationComment(symbol, null, theCompilation, null, true, true);
                     }
 
                     // If this symbol is a namespace, it won't have any documentation comments. We'll create one.
@@ -654,7 +658,10 @@ namespace DocExtractor
                 }
             }
 
-            return output;
+            symbols = output;
+            compilation = theCompilation;
+
+            return;
         }
 
         private static string PopulateMissingDocumentationElements(string doc, SyntaxNode node, string documentationID, SemanticModel model, out IEnumerable<string> undocumentedElementNames)
