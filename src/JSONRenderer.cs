@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
+using Microsoft.CodeAnalysis;
 
 #nullable enable
 
@@ -28,6 +29,9 @@ namespace DocExtractor
 
             [Description("The ID of the type that this symbol inherits from, if any.")]
             public string? BaseTypeID { get; set; }
+
+            [Description("The list of type IDs for interfaces that this symbol implements. Only relevant to class and struct symbols.")]
+            public List<string> ImplementedInterfaceTypeIDs { get; set; } = [];
 
             [Description("If null, the symbol is not obsolete; if not null, the symbol is obsolete.")]
             public ObsoleteInfo? Obsolete { get; set; } = null;
@@ -205,6 +209,10 @@ namespace DocExtractor
                     Obsolete = DocumentationPageData.ObsoleteInfo.GetObsoleteInfo(symbol),
                     Summary = GetDocumentationNodeAsHTML(xml, "summary"),
                     Remarks = GetDocumentationNodeAsHTML(xml, "remarks"),
+
+                    ImplementedInterfaceTypeIDs = (symbol.Symbol is INamedTypeSymbol namedTypeSymbol) ?
+                        [.. namedTypeSymbol.AllInterfaces.Select(i => i.GetDocumentationCommentId()!).Where(t => t != null)]
+                        : [],
 
                     DeclarationSyntax = symbol.Declaration,
 
