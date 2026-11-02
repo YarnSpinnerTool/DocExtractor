@@ -69,14 +69,29 @@ namespace DocExtractor
                 public string? Description { get; set; }
             }
 
-            public string? Returns { get; set; }
+            public ReturnInfo? Returns { get; set; }
+
+            internal record ReturnInfo
+            {
+                public required string TypeID { get; set; }
+                public string? Description { get; set; }
+                public string? TypeName { get; set; }
+            }
+
+
+            public FieldOrPropertyTypeInfo? FieldOrPropertyType { get; set; }
+            public record FieldOrPropertyTypeInfo
+            {
+                public required string? TypeID { get; set; }
+                public required string TypeName { get; set; }
+            }
 
             public List<ExceptionInfo> Exceptions { get; set; } = [];
 
             internal record ExceptionInfo
             {
-                public required string TypeName { get; set; }
-                public string? TypeID { get; set; }
+                public required string TypeID { get; set; }
+                public string? TypeName { get; set; }
                 public string? Description { get; set; }
 
             }
@@ -114,8 +129,32 @@ namespace DocExtractor
             {
                 var symbol = symbolDict[member.DocumentationID];
 
-
                 var xml = XElement.Parse(symbol.DocumentationXml);
+
+                DocumentationPageData.FieldOrPropertyTypeInfo? typeInfo = null;
+                DocumentationPageData.ReturnInfo? returnInfo = null;
+
+                var propertyOrTypeSymbol = RendererUtility.GetPropertyOrFieldType(symbol.Symbol);
+
+                if (propertyOrTypeSymbol?.GetDocumentationCommentId() is string fieldOrPropTypeID)
+                {
+                    typeInfo = new DocumentationPageData.FieldOrPropertyTypeInfo
+                    {
+                        TypeID = fieldOrPropTypeID,
+                        TypeName = propertyOrTypeSymbol.Name,
+                    };
+                }
+
+                var returnTypeSymbol = RendererUtility.GetMethodReturnType(symbol.Symbol);
+                if (returnTypeSymbol?.GetDocumentationCommentId() is string methodReturnTypeID)
+                {
+                    returnInfo = new DocumentationPageData.ReturnInfo
+                    {
+                        TypeID = methodReturnTypeID,
+                        TypeName = returnTypeSymbol.Name,
+                        Description = GetDocumentationNodeAsHTML(xml, "returns")
+                    };
+                }
 
                 var data = new DocumentationPageData
                 {
@@ -144,13 +183,28 @@ namespace DocExtractor
                             Name = typeParamNode.Attribute("name")?.Value ?? "(unknown)",
                             Description = GetDocumentationNodeAsHTML(typeParamNode)
                         }; })],
-                    Returns = GetDocumentationNodeAsHTML(xml, "returns"),
-                    Exceptions = [..xml.Elements("except").Select(exceptNode => {
+
+                    FieldOrPropertyType = typeInfo,
+
+                    Returns = returnInfo,
+
+                    // Returns = GetDocumentationNodeAsHTML(xml, "returns"),
+                    Exceptions = [..xml.Elements("exception").Select(exceptNode => {
                         var cref = exceptNode.Attribute("cref")?.Value;
+                        if (cref == null) {
+                            return new DocumentationPageData.ExceptionInfo {
+                                TypeID = "!:Unknown",
+                                TypeName  = "unknown",
+                                Description = GetDocumentationNodeAsHTML(exceptNode)
+                            };
+                        }
+
                         var exceptionSymbol = symbolDict[cref];
 
                         return new DocumentationPageData.ExceptionInfo {
-                            TypeName  = exceptionSymbol.DocumentationID,
+
+                            TypeID  = exceptionSymbol.DocumentationID,
+                            TypeName = exceptionSymbol.Symbol?.Name ?? exceptionSymbol.DocumentationID[2..],
                             Description = GetDocumentationNodeAsHTML(exceptNode)
                         };
                     })],

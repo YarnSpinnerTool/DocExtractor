@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 
 #nullable enable
 
@@ -52,6 +53,23 @@ namespace DocExtractor
                 }
             });
             return symbolDict;
+        }
+
+        public static ITypeSymbol? GetPropertyOrFieldType(ISymbol symbol)
+        {
+            return symbol switch
+            {
+                IPropertySymbol propertySymbol => propertySymbol.Type,
+                IFieldSymbol fieldSymbol => fieldSymbol.Type,
+                _ => null // not a property or a field
+            };
+        }
+
+        public static ITypeSymbol? GetMethodReturnType(ISymbol symbol)
+        {
+            return symbol is IMethodSymbol methodSymbol
+                ? methodSymbol.ReturnType
+                : null;
         }
 
     }
