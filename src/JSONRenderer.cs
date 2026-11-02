@@ -107,6 +107,7 @@ namespace DocExtractor
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
                 WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
 
             foreach (var member in documentedSymbols)
