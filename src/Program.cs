@@ -18,6 +18,11 @@ using System.CommandLine.Invocation;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
+using System.Reflection;
+using System.ComponentModel;
+using System.Diagnostics;
+
 
 namespace DocExtractor
 {
@@ -231,11 +236,50 @@ namespace DocExtractor
                         }
 
                         var indexPath = Path.Join(configuration.OutputFolder, "index.json");
-                        File.WriteAllText(indexPath, JsonSerializer.Serialize(indexNode, new JsonSerializerOptions
-                        {
-                            WriteIndented = true,
-                        }));
+                        File.WriteAllText(indexPath, JsonSerializer.Serialize(indexNode, JSONRenderer.SerializerOptions));
                         Console.WriteLine(indexPath);
+
+                        var schemaNode = JSONRenderer.SerializerOptions.GetJsonSchemaAsNode(typeof(JSONRenderer.DocumentationPageData), new JsonSchemaExporterOptions
+                        {
+                            TransformSchemaNode = (context, schema) =>
+                            {
+                                // Determine if a type or property and extract the relevant attribute provider.
+                                ICustomAttributeProvider attributeProvider = context.PropertyInfo is not null
+                                    ? context.PropertyInfo.AttributeProvider
+                                    : context.TypeInfo.Type;
+
+                                // Look up any description attributes.
+                                DescriptionAttribute descriptionAttr = attributeProvider?
+                                    .GetCustomAttributes(inherit: true)
+                                    .Select(attr => attr as DescriptionAttribute)
+                                    .FirstOrDefault(attr => attr is not null);
+
+                                // Apply description attribute to the generated schema.
+                                if (descriptionAttr != null)
+                                {
+                                    if (schema is not JsonObject jObj)
+                                    {
+                                        // Handle the case where the schema is a Boolean.
+                                        JsonValueKind valueKind = schema.GetValueKind();
+                                        Debug.Assert(valueKind is JsonValueKind.True or JsonValueKind.False);
+                                        schema = jObj = new JsonObject();
+                                        if (valueKind is JsonValueKind.False)
+                                        {
+                                            jObj.Add("not", true);
+                                        }
+                                    }
+
+                                    jObj.Insert(0, "description", descriptionAttr.Description);
+                                }
+
+                                return schema;
+                            }
+                        });
+                        var schemaPath = Path.Join(configuration.OutputFolder, "APIDocs.schema.json");
+                        File.WriteAllText(schemaPath, JsonSerializer.Serialize(schemaNode, JSONRenderer.SerializerOptions));
+                        Console.WriteLine(schemaPath);
+
+
                         break;
                     }
 

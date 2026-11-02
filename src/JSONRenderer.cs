@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 
@@ -13,21 +12,29 @@ namespace DocExtractor
 
     public static class JSONRenderer
     {
-        private record DocumentationPageData
+        internal record DocumentationPageData
         {
+            [Description("The Type ID of the symbol.")]
             public required string ID { get; init; }
+
+            [Description("The user-facing title of the symbol.")]
             public required string Title { get; set; }
 
-            public required string TypeName { get; set; }
+            [Description("The kind of this symbol: method, class, property, and so on.")]
+            public required string TypeKind { get; set; }
 
+            [Description("The ID of the type that contains this symbol, if any. (Most types will have a container, except for root namespaces.)")]
             public string? ContainingTypeID { get; set; }
 
+            [Description("The ID of the type that this symbol inherits from, if any.")]
             public string? BaseTypeID { get; set; }
 
+            [Description("If null, the symbol is not obsolete; if not null, the symbol is obsolete.")]
             public ObsoleteInfo? Obsolete { get; set; } = null;
 
             internal record ObsoleteInfo
             {
+                [Description("If not null, contains descriptive information about why a symbol is obsolete.")]
                 public string? Message { get; set; }
                 public static ObsoleteInfo? GetObsoleteInfo(DocumentedSymbol symbol)
                 {
@@ -45,85 +52,117 @@ namespace DocExtractor
                 }
             }
 
+            [Description("The user-facing summary of the symbol, as HTML.")]
             public string? Summary { get; set; }
 
+            [Description("The syntax of the declaration for this symbol.")]
             public string? DeclarationSyntax { get; set; }
 
+            [Description("User-facing additional remarks for this symbol.")]
             public string? Remarks { get; set; }
 
+            [Description("The collection of parameters that this symbol receives. Only relevant for methods.")]
             public List<ParameterInfo> Parameters { get; set; } = [];
 
             internal record ParameterInfo
             {
+                [Description("The name of the parameter, as it appears in source code.")]
                 public required string Name { get; set; }
+                [Description("The type ID for this parameter.")]
                 public string? TypeID { get; set; }
+                [Description("The user-facing name for the type of this parameter.")]
                 public required string TypeName { get; set; }
+                [Description("The user-facing description for this parameter.")]
                 public string? Description { get; set; }
             }
 
+            [Description("The type parameters for this symbol.")]
             public List<TypeParameterInfo> TypeParameters { get; set; } = [];
 
             internal record TypeParameterInfo
             {
+                [Description("The name of this symbol.")]
                 public required string Name { get; set; }
+                [Description("The user-facing description for this symbol.")]
                 public string? Description { get; set; }
             }
 
+            [Description("Information about the return type and value for this symbol. Only relevant for methods.")]
             public ReturnInfo? Returns { get; set; }
 
             internal record ReturnInfo
             {
+                [Description("The type ID for the returned value.")]
                 public required string TypeID { get; set; }
+                [Description("The user-facing description of the return value.")]
                 public string? Description { get; set; }
+                [Description("The user-facing name of the type of the return value.")]
                 public string? TypeName { get; set; }
             }
 
-
+            [Description("Information about the type of this symbol. Only relevant for fields and properties.")]
             public FieldOrPropertyTypeInfo? FieldOrPropertyType { get; set; }
+
             public record FieldOrPropertyTypeInfo
             {
+                [Description("The type ID for this symbol.")]
                 public required string? TypeID { get; set; }
+                [Description("The user-facing name of the type of this symbol.")]
                 public required string TypeName { get; set; }
             }
 
+            [Description("The collection of exceptions that can be thrown by invoking this symbol. Only relevant for methods and properties.")]
             public List<ExceptionInfo> Exceptions { get; set; } = [];
 
             internal record ExceptionInfo
             {
+                [Description("The type ID for the type of the exception.")]
                 public required string TypeID { get; set; }
+                [Description("The user-facing name of the type of this exception.")]
                 public string? TypeName { get; set; }
+                [Description("The user-facing description of when this exception can be thrown.")]
                 public string? Description { get; set; }
-
             }
 
+            [Description("The collection of symbols that are children of this symbol.")]
             public List<ChildInfo> Children { get; set; } = [];
 
             internal record ChildInfo
             {
+                [Description("The ID of this symbol.")]
                 public required string ID { get; set; }
+                [Description("The user-facing name for this symbol.")]
                 public required string TypeName { get; set; }
+                [Description("The user-facing summary of this symbol. Equivalent to the 'summary' field.")]
+                public string? Description { get; set; }
             }
 
+            [Description("The collection of symbols or links marked as 'see also' in the source code.")]
             public List<SeeAlsoInfo> SeeAlso { get; set; } = [];
+
+
             internal record SeeAlsoInfo
             {
+                [Description("A URL to show.")]
                 public string? URL { get; set; }
+                [Description("A documented type to refer to.")]
                 public string? TypeID { get; set; }
             }
-
         }
+
+        public static JsonSerializerOptions SerializerOptions = new()
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        };
 
         public record File(string Name, string Contents, string DocumentationID);
         internal static IEnumerable<File> GenerateJSONForDocXML(IEnumerable<DocumentedSymbol> documentedSymbols, DefaultDictionary<string, DocumentedSymbol> symbolDict)
         {
             var output = new Dictionary<string, string>();
 
-            var options = new JsonSerializerOptions
-            {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            };
+
 
             foreach (var member in documentedSymbols)
             {
@@ -160,7 +199,7 @@ namespace DocExtractor
                 {
                     ID = member.DocumentationID,
                     Title = symbol.FullDisplayName,
-                    TypeName = HTMLRenderer.GetTypeName(symbol),
+                    TypeKind = HTMLRenderer.GetTypeName(symbol),
                     ContainingTypeID = documentedSymbols.FirstOrDefault(s => symbol.ContainerID == s.DocumentationID)?.DocumentationID,
                     BaseTypeID = symbol.BaseTypeID,
                     Obsolete = DocumentationPageData.ObsoleteInfo.GetObsoleteInfo(symbol),
@@ -223,7 +262,7 @@ namespace DocExtractor
 
                 yield return new File(
                     symbol.AnchorName + ".json",
-                    JsonSerializer.Serialize(data, options),
+                    JsonSerializer.Serialize(data, SerializerOptions),
                     symbol.DocumentationID
                 );
             }
