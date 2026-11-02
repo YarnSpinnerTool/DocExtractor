@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+#nullable enable
+
 namespace DocExtractor
 {
     internal static class RendererUtility
@@ -19,16 +21,13 @@ namespace DocExtractor
             {
                 // We were asked for a symbol with a given key, but we
                 // don't have one. Make one up using the key.
-                if (key == null)
-                {
-                    key = "(null)";
-                }
+                key ??= "(null)";
 
                 DocumentedSymbol documentedSymbol = new DocumentedSymbol
                 {
                     AnchorName = null,
-                    DisplayName = key.Substring(2), // skip the "!:" or similar prefix
-                    FullDisplayName = key.Substring(2),
+                    DisplayName = key[2..], // skip the "!:" or similar prefix
+                    FullDisplayName = key[2..],
                     DocumentationID = key,
                     ContainerID = null,
                     DocumentationXml = $@"<member name=""{key}""><summary></summary></member>",
@@ -38,7 +37,6 @@ namespace DocExtractor
                 {
                     documentedSymbol.DisplayName = knownName;
                 }
-
 
                 return documentedSymbol;
             },

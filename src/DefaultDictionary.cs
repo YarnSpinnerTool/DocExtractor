@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
+#nullable enable
+
 namespace DocExtractor
 {
     /// <summary>
@@ -11,15 +13,15 @@ namespace DocExtractor
     /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
     /// <inheritdoc/>
-    internal class DefaultDictionary<TKey, TValue> : IDictionary<TKey, TValue>
+    internal class DefaultDictionary<TKey, TValue> : IDictionary<TKey, TValue> where TKey : notnull
     {
-        private Dictionary<TKey, TValue> _storage = new Dictionary<TKey, TValue>();
+        private readonly Dictionary<TKey, TValue> _storage = [];
 
         public delegate TValue FallbackValueProvider(TKey key);
-        public delegate TKey AlternativeKeyProvider(TKey key);
+        public delegate TKey? AlternativeKeyProvider(TKey key);
 
-        private FallbackValueProvider fallbackProvider;
-        private AlternativeKeyProvider alternativeKeyProvider;
+        private readonly FallbackValueProvider fallbackProvider;
+        private readonly AlternativeKeyProvider? alternativeKeyProvider;
 
         /// <summary>
         /// Creates a new instance of <see
@@ -32,7 +34,7 @@ namespace DocExtractor
         /// <param name="alternativeKeyProvider">A method to use to provide an
         /// alternate key, if the dictionary is asked for a key that is not
         /// present.</param>
-        public DefaultDictionary(FallbackValueProvider fallbackProvider, AlternativeKeyProvider alternativeKeyProvider = null)
+        public DefaultDictionary(FallbackValueProvider fallbackProvider, AlternativeKeyProvider? alternativeKeyProvider = null)
         {
             this.fallbackProvider = fallbackProvider;
             this.alternativeKeyProvider = alternativeKeyProvider;
@@ -45,7 +47,7 @@ namespace DocExtractor
         /// </summary>
         /// <param name="fallbackProvider"><inheritdoc cref="DefaultDictionary(FallbackValueProvider)" path="/param[@name='valueFactory']/node()" /></param>
         /// <param name="sourceDictionary"></param>
-        public DefaultDictionary(Dictionary<TKey, TValue> sourceDictionary, FallbackValueProvider fallbackProvider, AlternativeKeyProvider alternativeKeyProvider = null)
+        public DefaultDictionary(Dictionary<TKey, TValue> sourceDictionary, FallbackValueProvider fallbackProvider, AlternativeKeyProvider? alternativeKeyProvider = null)
         {
             this.fallbackProvider = fallbackProvider;
             this.alternativeKeyProvider = alternativeKeyProvider;
@@ -114,22 +116,26 @@ namespace DocExtractor
             ((ICollection<KeyValuePair<TKey, TValue>>)_storage).Add(item);
         }
 
-        public void Clear()
-        {
-            ((ICollection<KeyValuePair<TKey, TValue>>)_storage).Clear();
-        }
+        public void Clear() => ((ICollection<KeyValuePair<TKey, TValue>>)_storage).Clear();
 
-        public bool Contains(KeyValuePair<TKey, TValue> item)
-        {
-            return ((ICollection<KeyValuePair<TKey, TValue>>)_storage).Contains(item);
-        }
+        public bool Contains(KeyValuePair<TKey, TValue> item) => ((ICollection<KeyValuePair<TKey, TValue>>)_storage).Contains(item);
 
         public bool ContainsKey(TKey key)
         {
             // Return true if we have a value for this key; if it doesn't, and
             // we have an alternative key provider, return true if we have a
             // value for the alternative key.
-            return ((IDictionary<TKey, TValue>)_storage).ContainsKey(key) || (alternativeKeyProvider != null && _storage.ContainsKey(alternativeKeyProvider(key)));
+            if (((IDictionary<TKey, TValue>)_storage).ContainsKey(key))
+            {
+                return true;
+            }
+
+            if (alternativeKeyProvider == null) { return false; }
+
+            var alternativeKey = alternativeKeyProvider(key);
+            if (alternativeKey == null) { return false; }
+
+            return _storage.ContainsKey(alternativeKey);
         }
 
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
