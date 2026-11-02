@@ -130,13 +130,21 @@ namespace DocExtractor
                 }
 
                 var file = new FileInfo(path);
+                Project project;
 
-                Project project = GetProjectFromPath(file.FullName);
-
-                if (project == null)
+                if (file.Extension == ".csproj")
+                {
+                    project = GetProjectFromCSProj(file.FullName);
+                }
+                else if (file.Extension == ".asmdef")
+                {
+                    project = GetProjectFromUnityAsmDef(file.FullName, ["/Users/desplesda/Work/DocExtractor/in/dev.yarnspinner.unity"]);
+                }
+                else
                 {
                     Console.Error.WriteLine($"{path} is not a valid project file.");
                     System.Environment.Exit(1);
+                    return;
                 }
 
                 var thisProjectSymbols = GenerateDocumentedSymbols(project, configuration).ToList();
@@ -792,11 +800,58 @@ namespace DocExtractor
             return xml.ToString();
         }
 
-        static Project GetProjectFromPath(string path)
+        static Project GetProjectFromCSProj(string path)
         {
             MSBuildWorkspace workspace = MSBuildWorkspace.Create();
 
             return workspace.OpenProjectAsync(path).Result;
+        }
+
+        static Project GetProjectFromUnityAsmDef(string path, IEnumerable<string> assemblySearchPaths)
+        {
+            // Create our workspace
+            AdhocWorkspace adhocWorkspace = new();
+
+            var baseProject = adhocWorkspace.AddProject("Base", LanguageNames.CSharp);
+
+            // Find all assemblies that might be referenced
+            var allAssemblies = Directory.EnumerateFiles(Path.GetDirectoryName(path), "*.dll", SearchOption.AllDirectories).ToDictionary(f => Path.GetFileName(f));
+
+            // Find all .cs files that descend are in this folder or its descendants
+            var allCSFiles = Directory.EnumerateFiles(Path.GetDirectoryName(path), "*.cs", SearchOption.AllDirectories);
+            foreach (var file in allCSFiles)
+            {
+                // Add the document to this project
+                adhocWorkspace.AddDocument(baseProject.Id, file, Microsoft.CodeAnalysis.Text.SourceText.From(File.ReadAllText(file)));
+            }
+
+            // Add the core .NET assembly that contains basic types like Object and String
+            {
+                var coreAssembly = typeof(object).Assembly;
+                var metadataRef = MetadataReference.CreateFromFile(coreAssembly.Location);
+                adhocWorkspace.TryApplyChanges(adhocWorkspace.CurrentSolution.AddMetadataReference(baseProject.Id, metadataRef));
+            }
+
+            // Read the asmdef and find assemblies it references
+            var asmDefDocument = JsonNode.Parse(File.ReadAllText(path)).AsObject();
+            if (asmDefDocument.TryGetPropertyValue("precompiledReferences", out var references) && references is JsonArray referencesArray)
+            {
+                foreach (var reference in referencesArray)
+                {
+                    var referenceName = reference.AsValue().ToString();
+                    if (allAssemblies.TryGetValue(referenceName, out var referencePath))
+                    {
+                        var metadataReference = MetadataReference.CreateFromFile(referencePath);
+
+                        adhocWorkspace.TryApplyChanges(adhocWorkspace.CurrentSolution.AddMetadataReference(
+                            baseProject.Id, metadataReference)
+                        );
+                    }
+                }
+            }
+
+            // All done!
+            return adhocWorkspace.CurrentSolution.GetProject(baseProject.Id);
         }
     }
 
