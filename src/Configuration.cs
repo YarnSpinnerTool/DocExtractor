@@ -6,6 +6,7 @@ namespace DocExtractor
     [Serializable]
     class Configuration
     {
+        public string? Name { get; set; }
         public List<string> Projects { get; set; } = new List<string>();
         public List<string> ExcludeRegexes { get; set; } = new List<string>();
         public OutputFormat OutputFormat { get; set; } = OutputFormat.HTML;

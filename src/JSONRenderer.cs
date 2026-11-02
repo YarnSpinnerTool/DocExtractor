@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
@@ -13,8 +14,22 @@ namespace DocExtractor
 
     public static class JSONRenderer
     {
-        internal record DocumentationPageData
+        internal record DocumentationData
         {
+            [Description("The engine that this API is intended for")]
+            public required string Engine { get; set; }
+
+            [Description("The version of this API")]
+            public required string Version { get; set; }
+            [Description("The documented API items")]
+            public Dictionary<string, DocumentationPageData> DocumentedSymbols { get; set; } = [];
+        }
+
+        public record DocumentationPageData
+        {
+            // Required for deserialization
+            public DocumentationPageData() { }
+
             [Description("The Type ID of the symbol.")]
             public required string ID { get; init; }
 
@@ -36,7 +51,7 @@ namespace DocExtractor
             [Description("If null, the symbol is not obsolete; if not null, the symbol is obsolete.")]
             public ObsoleteInfo? Obsolete { get; set; } = null;
 
-            internal record ObsoleteInfo
+            public record ObsoleteInfo
             {
                 [Description("If not null, contains descriptive information about why a symbol is obsolete.")]
                 public string? Message { get; set; }
@@ -68,7 +83,7 @@ namespace DocExtractor
             [Description("The collection of parameters that this symbol receives. Only relevant for methods.")]
             public List<ParameterInfo> Parameters { get; set; } = [];
 
-            internal record ParameterInfo
+            public record ParameterInfo
             {
                 [Description("The name of the parameter, as it appears in source code.")]
                 public required string Name { get; set; }
@@ -83,7 +98,7 @@ namespace DocExtractor
             [Description("The type parameters for this symbol.")]
             public List<TypeParameterInfo> TypeParameters { get; set; } = [];
 
-            internal record TypeParameterInfo
+            public record TypeParameterInfo
             {
                 [Description("The name of this symbol.")]
                 public required string Name { get; set; }
@@ -94,7 +109,7 @@ namespace DocExtractor
             [Description("Information about the return type and value for this symbol. Only relevant for methods.")]
             public ReturnInfo? Returns { get; set; }
 
-            internal record ReturnInfo
+            public record ReturnInfo
             {
                 [Description("The type ID for the returned value.")]
                 public required string TypeID { get; set; }
@@ -118,7 +133,7 @@ namespace DocExtractor
             [Description("The collection of exceptions that can be thrown by invoking this symbol. Only relevant for methods and properties.")]
             public List<ExceptionInfo> Exceptions { get; set; } = [];
 
-            internal record ExceptionInfo
+            public record ExceptionInfo
             {
                 [Description("The type ID for the type of the exception.")]
                 public required string TypeID { get; set; }
@@ -131,21 +146,24 @@ namespace DocExtractor
             [Description("The collection of symbols that are children of this symbol.")]
             public List<ChildInfo> Children { get; set; } = [];
 
-            internal record ChildInfo
+            public record ChildInfo
             {
                 [Description("The ID of this symbol.")]
                 public required string ID { get; set; }
-                [Description("The user-facing name for this symbol.")]
-                public required string TypeName { get; set; }
+
+                [Description("The kind of symbol (class, method, etc).")]
+                public required string TypeKind { get; set; }
                 [Description("The user-facing summary of this symbol. Equivalent to the 'summary' field.")]
                 public string? Description { get; set; }
+                [Description("The name of this symbol")]
+                public required string Name { get; set; }
             }
 
             [Description("The collection of symbols or links marked as 'see also' in the source code.")]
             public List<SeeAlsoInfo> SeeAlso { get; set; } = [];
 
 
-            internal record SeeAlsoInfo
+            public record SeeAlsoInfo
             {
                 [Description("A URL to show.")]
                 public string? URL { get; set; }
@@ -162,11 +180,14 @@ namespace DocExtractor
         };
 
         public record File(string Name, string Contents, string DocumentationID);
-        internal static IEnumerable<File> GenerateJSONForDocXML(IEnumerable<DocumentedSymbol> documentedSymbols, DefaultDictionary<string, DocumentedSymbol> symbolDict)
+        internal static DocumentationData GenerateJSONForDocXML(string engineName, string version, IEnumerable<DocumentedSymbol> documentedSymbols, DefaultDictionary<string, DocumentedSymbol> symbolDict)
         {
-            var output = new Dictionary<string, string>();
 
-
+            var output = new DocumentationData()
+            {
+                Engine = engineName,
+                Version = version,
+            };
 
             foreach (var member in documentedSymbols)
             {
@@ -203,7 +224,7 @@ namespace DocExtractor
                 {
                     ID = member.DocumentationID,
                     Title = symbol.FullDisplayName,
-                    TypeKind = HTMLRenderer.GetTypeName(symbol),
+                    TypeKind = HTMLRenderer.GetTypeName(symbol).ToLowerInvariant(),
                     ContainingTypeID = documentedSymbols.FirstOrDefault(s => symbol.ContainerID == s.DocumentationID)?.DocumentationID,
                     BaseTypeID = symbol.BaseTypeID,
                     Obsolete = DocumentationPageData.ObsoleteInfo.GetObsoleteInfo(symbol),
@@ -261,19 +282,22 @@ namespace DocExtractor
                         .Where(s => s.ContainerID == symbol.DocumentationID)
                         .Select(s => new DocumentationPageData.ChildInfo {
                             ID = s.DocumentationID,
-                            TypeName = HTMLRenderer.GetTypeName(s)
+                            Name = s.Symbol.Name,
+                            TypeKind = HTMLRenderer.GetTypeName(s)
                         })
                     ],
 
                     // TODO: seealso
                 };
 
-                yield return new File(
-                    symbol.AnchorName + ".json",
-                    JsonSerializer.Serialize(data, SerializerOptions),
-                    symbol.DocumentationID
+                output.DocumentedSymbols.Add(
+                    symbol.DocumentationID,
+                    data
                 );
             }
+
+            return output;
+
             string? GetDocumentationNodeAsHTML(XElement xml, string? childNodeName = null)
             {
                 if (childNodeName != null)
@@ -414,5 +438,36 @@ namespace DocExtractor
             return output;
         }
 
+    }
+
+    public static class JsonNodeExtensions
+    {
+        public static JsonNode? WithSortedKeys(this JsonNode? node)
+        {
+            if (node is JsonObject jsonObject)
+            {
+                var sortedObject = new JsonObject();
+
+                foreach (var kv in jsonObject.OrderBy(p => p.Key, System.StringComparer.Ordinal))
+                {
+                    sortedObject.Add(kv.Key, kv.Value.WithSortedKeys());
+                }
+                return sortedObject;
+            }
+            else if (node is JsonArray jsonArray)
+            {
+                var sortedArray = new JsonArray();
+
+                foreach (var item in jsonArray)
+                {
+                    sortedArray.Add(item.WithSortedKeys());
+                }
+                return sortedArray;
+            }
+            else
+            {
+                return node?.DeepClone();
+            }
+        }
     }
 }

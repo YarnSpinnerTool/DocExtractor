@@ -218,28 +218,21 @@ namespace DocExtractor
                         var documentedSymbols = assemblySymbols.SelectMany(kv => kv.Value);
                         var symbolDict = RendererUtility.CreateSymbolDictionary(documentedSymbols);
 
-                        var files = JSONRenderer.GenerateJSONForDocXML(documentedSymbols, symbolDict);
 
-                        foreach (var file in files)
-                        {
-                            var path = Path.Join(configuration.OutputFolder, file.Name);
-                            File.WriteAllText(path, file.Contents);
-                            Console.WriteLine(path);
-                        }
+                        const string Version = "3.3";
+                        const string EngineName = "Unity";
+                        var outputData = JSONRenderer.GenerateJSONForDocXML(EngineName, Version, documentedSymbols, symbolDict);
 
+                        var outputDataNode = JsonSerializer.SerializeToNode(outputData, JSONRenderer.SerializerOptions) as JsonObject;
 
-                        var indexNode = new JsonObject();
+                        outputDataNode["documentedSymbols"] = outputDataNode["documentedSymbols"].WithSortedKeys();
+                        outputDataNode.Insert(0, "$schema", "./APIDocs.schema.json");
 
-                        foreach (var f in files.OrderBy(f => f.DocumentationID))
-                        {
-                            indexNode.Add(f.DocumentationID, f.Name);
-                        }
+                        var outputJSON = JsonSerializer.Serialize(outputDataNode, JSONRenderer.SerializerOptions);
+                        var outputPath = Path.Join(configuration.OutputFolder, $"{configuration.Name ?? "api"}-{EngineName}-{Version}.json");
+                        File.WriteAllText(outputPath, outputJSON);
 
-                        var indexPath = Path.Join(configuration.OutputFolder, "index.json");
-                        File.WriteAllText(indexPath, JsonSerializer.Serialize(indexNode, JSONRenderer.SerializerOptions));
-                        Console.WriteLine(indexPath);
-
-                        var schemaNode = JSONRenderer.SerializerOptions.GetJsonSchemaAsNode(typeof(JSONRenderer.DocumentationPageData), new JsonSchemaExporterOptions
+                        var schemaNode = JSONRenderer.SerializerOptions.GetJsonSchemaAsNode(typeof(JSONRenderer.DocumentationData), new JsonSchemaExporterOptions
                         {
                             TransformSchemaNode = (context, schema) =>
                             {
