@@ -287,7 +287,7 @@ namespace DocExtractor
                         .Select(s => new DocumentationPageData.ChildInfo {
                             ID = s.DocumentationID,
                             Name = s.Symbol.Name,
-                            TypeKind = HTMLRenderer.GetTypeName(s)
+                            TypeKind = HTMLRenderer.GetTypeName(s).ToLowerInvariant(),
                         })
                     ],
 
