@@ -333,7 +333,7 @@ namespace DocExtractor
                 }
 
                 XElement? html = CreateHTMLFromXMLTags(xml, symbolDict);
-                return string.Join("", html.DescendantNodes()).Trim().ToString();
+                return string.Join("", html.Nodes()).Trim().ToString();
             }
         }
 
