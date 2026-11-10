@@ -1,0 +1,73 @@
+{
+    "name": "unity",
+    "version": "3.2",
+    "platform": "Unity",
+    "projects": [
+        "./in/3.2/YarnSpinner/YarnSpinner/YarnSpinner.csproj",
+        "./in/3.2/YarnSpinner/YarnSpinner.Compiler/YarnSpinner.Compiler.csproj",
+        "./in/3.2/dev.yarnspinner.unity/Runtime/YarnSpinner.Unity.asmdef"
+    ],
+    "excludeRegexes": [
+        // Exclude certain namespaces that aren't intended for public consumption
+        "^Yarn\\.Analysis",
+        "^Yarn\\.Dialogue\\.Analyse",
+        "^Yarn\\.Compiler\\.Graph",
+        "^Yarn\\.Compiler\\.YarnSpinner(V1)?(Parser|Lexer)",
+        "^Yarn\\.Compiler\\.IYarnSpinner(V1)?(Parser|Lexer)",
+        "^Yarn\\.Compiler\\.StructuredCommandParser",
+        "^Yarn\\.Compiler\\.InstructionCollectionExtensions",
+        "^Yarn\\.Compiler\\.BasicBlock",
+        "^Yarn\\.Compiler\\.ITypedContext",
+        "^Yarn\\.Unity\\.Attributes",
+        "^TypeChecker",
+        "^CLDRPlurals",
+        "^Yarn.Unity.YarnTaskMethodBuilder",
+        // Exclude the constructor of attributes that we define (the properties
+        // they rely on are documented anyway, and the constructor is never
+        // explicitly invoked)
+        "^Yarn\\..*Attribute\\.#ctor",
+        // Compiler ANTLR listener methods that are only public because they're
+        // interface implementations, not because they're used by client-facing
+        // code
+        "^Yarn\\.Compiler\\.Compiler\\.(Enter|Exit).*",
+        // Exclude Protobuf APIs
+        "^Yarn\\.(Node|Program|Instruction|Operand)\\.#ctor",
+        "^Yarn\\.(Node|Program|Instruction|Operand)\\.Types",
+        "^Yarn\\.(Node|Program|Instruction|Operand)\\.(CalculateSize|Clone|Equals|GetHashCode|MergeFrom|ToString$|Descriptor|Parser|Google#Protobuf#IMessage#Descriptor|WriteTo|.*FieldNumber)",
+        "^Yarn\\.(Operand|Instruction)",
+        "^Yarn.YarnSpinnerReflection",
+        // Placeholder classes that are not intended to be used directly by the user.
+        "^Yarn\\.Unity\\.TMPShim.*",
+        "^System.Diagnostics.CodeAnalysis",
+        "^System.Runtime",
+        // Implicit conversion operators
+        ".*op_Implicit.*"
+    ],
+    "pathPrefix": "/docs/api/csharp",
+    "tocPathPrefix": "api/csharp",
+    // destination folder
+    "outputFolder": "/Users/desplesda/Work/DocExtractor/out",
+    // can be "html", "xml", "markdown", or "json"
+    "outputFormat": "json",
+    "namespaceSummaries": {
+        "Yarn": "Contains classes for working with compiled Yarn programs.",
+        "Yarn.Markup": "Contains classes for working with markup in Yarn lines.",
+        "Yarn.Unity": "Contains classes for working with Yarn Spinner in the Unity game engine.",
+        "Yarn.Unity.Legacy": "Contains compatibility features for code designed to work with earlier versions of Yarn Spinner for Unity.",
+        "Yarn.Unity.UnityLocalization": "Contains classes for working with the Unity Localization system and Yarn Spinner.",
+        "Yarn.Utility": "Contains utility classes used by Yarn Spinner.",
+        "Yarn.Saliency": "Contains classes for choosing the most relevant content out of a set of possible options.",
+        "Yarn.Compiler": "Contains classes for compiling Yarn code.",
+        "Yarn.Compiler.Upgrader": "Contains classes for upgrading Yarn code to more recent versions of the language."
+    },
+    "preprocessorSymbols": [
+        "USE_INPUTSYSTEM",
+        "ENABLE_INPUT_SYSTEM",
+        "ENABLE_LEGACY_INPUT_MANAGER",
+        "USE_ADDRESSABLES",
+        "USE_TMP",
+        "USE_UNITY_LOCALIZATION"
+    ],
+    "msBuildPath": "/usr/local/share/dotnet/sdk/8.0.201",
+    "indentLevel": 2
+}
