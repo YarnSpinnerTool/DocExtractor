@@ -219,8 +219,8 @@ namespace DocExtractor
                         var symbolDict = RendererUtility.CreateSymbolDictionary(documentedSymbols);
 
 
-                        const string Version = "3.3";
-                        const string EngineName = "Unity";
+                        string Version = configuration.Version;
+                        string EngineName = configuration.Platform;
                         var outputData = JSONRenderer.GenerateJSONForDocXML(EngineName, Version, documentedSymbols, symbolDict);
 
                         foreach (var path in projectFiles)
@@ -235,11 +235,19 @@ namespace DocExtractor
 
                         const string APIDocsSchemaFileName = "APIDocs.schema.json";
 
+                        var schemaPath = Path.Join(configuration.OutputFolder, "APIDocs.schema.json");
+                        var outputPath = Path.Join(configuration.OutputFolder, configuration.Name, $"{Version}.json");
+
+                        var relativeSchemaPath = Path.GetRelativePath(Path.GetDirectoryName(outputPath), schemaPath);
+
                         outputDataNode["documentedSymbols"] = outputDataNode["documentedSymbols"].WithSortedKeys();
-                        outputDataNode.Insert(0, "$schema", "./" + APIDocsSchemaFileName);
+                        outputDataNode.Insert(0, "$schema", relativeSchemaPath);
 
                         var outputJSON = JsonSerializer.Serialize(outputDataNode, JSONRenderer.SerializerOptions);
-                        var outputPath = Path.Join(configuration.OutputFolder, $"{configuration.Name ?? "api"}-{EngineName}-{Version}.json");
+
+
+                        Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+
                         File.WriteAllText(outputPath, outputJSON);
 
                         var schemaNode = JSONRenderer.SerializerOptions.GetJsonSchemaAsNode(typeof(JSONRenderer.DocumentationData), new JsonSchemaExporterOptions
@@ -279,7 +287,6 @@ namespace DocExtractor
                             }
                         });
 
-                        var schemaPath = Path.Join(configuration.OutputFolder, APIDocsSchemaFileName);
                         File.WriteAllText(schemaPath, JsonSerializer.Serialize(schemaNode, JSONRenderer.SerializerOptions));
                         Console.WriteLine(schemaPath);
 
