@@ -44,6 +44,43 @@ namespace DocExtractor
             }
         };
 
+        private static JsonSchemaExporterOptions SchemaExporterOptions = new JsonSchemaExporterOptions
+        {
+            TransformSchemaNode = (context, schema) =>
+            {
+                // Determine if a type or property and extract the relevant attribute provider.
+                ICustomAttributeProvider attributeProvider = context.PropertyInfo is not null
+                    ? context.PropertyInfo.AttributeProvider
+                    : context.TypeInfo.Type;
+
+                // Look up any description attributes.
+                DescriptionAttribute descriptionAttr = attributeProvider?
+                    .GetCustomAttributes(inherit: true)
+                    .Select(attr => attr as DescriptionAttribute)
+                    .FirstOrDefault(attr => attr is not null);
+
+                // Apply description attribute to the generated schema.
+                if (descriptionAttr != null)
+                {
+                    if (schema is not JsonObject jObj)
+                    {
+                        // Handle the case where the schema is a Boolean.
+                        JsonValueKind valueKind = schema.GetValueKind();
+                        Debug.Assert(valueKind is JsonValueKind.True or JsonValueKind.False);
+                        schema = jObj = new JsonObject();
+                        if (valueKind is JsonValueKind.False)
+                        {
+                            jObj.Add("not", true);
+                        }
+                    }
+
+                    jObj.Insert(0, "description", descriptionAttr.Description);
+                }
+
+                return schema;
+            }
+        };
+
         static void Main(string[] args)
         {
             var rootCommand = new RootCommand();
@@ -62,14 +99,58 @@ namespace DocExtractor
                     .LegalFilePathsOnly()
             );
 
+            var diffCommand = new Command("diff", "Diffs two JSON documentation files");
+            diffCommand.AddArgument(new Argument<FileInfo>("from", "The base documentation file"));
+            diffCommand.AddArgument(new Argument<FileInfo>("to", "The changed documentation"));
+            diffCommand.AddOption(new Option<string?>("--output", "The output path. If not set, writes to stdout."));
+            diffCommand.AddOption(new Option<string?>("--output-schema", "The output path of the JSON schema. If not set, the schema will not be written."));
+            diffCommand.Handler = CommandHandler.Create<FileInfo, FileInfo, string?, string?>(DiffDocumentation);
+
             createCommand.Handler = CommandHandler.Create<string>(CreateConfiguration);
 
             buildCommand.Handler = CommandHandler.Create<FileInfo>(BuildDocumentation);
 
             rootCommand.Add(createCommand);
             rootCommand.Add(buildCommand);
+            rootCommand.Add(diffCommand);
 
             rootCommand.Invoke(args);
+        }
+
+        private static void DiffDocumentation(FileInfo from, FileInfo to, string? output, string? outputSchema)
+        {
+            DocumentationDiffResult result = DiffJSONDocumentation.CreateDiffResult(from, to);
+
+            var json = JsonSerializer
+                .SerializeToNode(result, JSONRenderer.SerializerOptions)
+                .WithSortedKeys()
+                as JsonObject;
+
+            if (outputSchema != null)
+            {
+
+                var schema = JSONRenderer.SerializerOptions.GetJsonSchemaAsNode(typeof(DocumentationDiffResult), SchemaExporterOptions);
+                File.WriteAllText(outputSchema, JsonSerializer.Serialize(schema, JSONRenderer.SerializerOptions));
+            }
+
+            if (output != null)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(output));
+
+                if (outputSchema != null)
+                {
+                    json.Insert(0, "$schema", Path.GetRelativePath(Path.GetDirectoryName(output), outputSchema));
+
+                }
+
+
+                File.WriteAllText(output, json.ToJsonString(JSONRenderer.SerializerOptions));
+            }
+            else
+            {
+                Console.Out.WriteLine(json);
+            }
+
         }
 
         private static void CreateConfiguration(string path)
@@ -233,8 +314,6 @@ namespace DocExtractor
 
                         var outputDataNode = JsonSerializer.SerializeToNode(outputData, JSONRenderer.SerializerOptions) as JsonObject;
 
-                        const string APIDocsSchemaFileName = "APIDocs.schema.json";
-
                         var schemaPath = Path.Join(configuration.OutputFolder, "APIDocs.schema.json");
                         var outputPath = Path.Join(configuration.OutputFolder, configuration.Name, $"{Version}.json");
 
@@ -250,42 +329,9 @@ namespace DocExtractor
 
                         File.WriteAllText(outputPath, outputJSON);
 
-                        var schemaNode = JSONRenderer.SerializerOptions.GetJsonSchemaAsNode(typeof(JSONRenderer.DocumentationData), new JsonSchemaExporterOptions
-                        {
-                            TransformSchemaNode = (context, schema) =>
-                            {
-                                // Determine if a type or property and extract the relevant attribute provider.
-                                ICustomAttributeProvider attributeProvider = context.PropertyInfo is not null
-                                    ? context.PropertyInfo.AttributeProvider
-                                    : context.TypeInfo.Type;
 
-                                // Look up any description attributes.
-                                DescriptionAttribute descriptionAttr = attributeProvider?
-                                    .GetCustomAttributes(inherit: true)
-                                    .Select(attr => attr as DescriptionAttribute)
-                                    .FirstOrDefault(attr => attr is not null);
 
-                                // Apply description attribute to the generated schema.
-                                if (descriptionAttr != null)
-                                {
-                                    if (schema is not JsonObject jObj)
-                                    {
-                                        // Handle the case where the schema is a Boolean.
-                                        JsonValueKind valueKind = schema.GetValueKind();
-                                        Debug.Assert(valueKind is JsonValueKind.True or JsonValueKind.False);
-                                        schema = jObj = new JsonObject();
-                                        if (valueKind is JsonValueKind.False)
-                                        {
-                                            jObj.Add("not", true);
-                                        }
-                                    }
-
-                                    jObj.Insert(0, "description", descriptionAttr.Description);
-                                }
-
-                                return schema;
-                            }
-                        });
+                        var schemaNode = JSONRenderer.SerializerOptions.GetJsonSchemaAsNode(typeof(JSONRenderer.DocumentationData), SchemaExporterOptions);
 
                         File.WriteAllText(schemaPath, JsonSerializer.Serialize(schemaNode, JSONRenderer.SerializerOptions));
                         Console.WriteLine(schemaPath);

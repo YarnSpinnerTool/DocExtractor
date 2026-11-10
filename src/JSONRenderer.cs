@@ -46,6 +46,10 @@ namespace DocExtractor
             [Description("The ID of the type that contains this symbol, if any. (Most types will have a container, except for root namespaces.)")]
             public string? ContainingTypeID { get; set; }
 
+            [Description("The containing namespace ID for this symbol, or null if the symbol is in the root namespace.")]
+            [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
+            public string? ContainingNamespaceID { get; set; }
+
             [Description("The ID of the type that this symbol inherits from, if any.")]
             public string? BaseTypeID { get; set; }
 
@@ -228,6 +232,7 @@ namespace DocExtractor
                 {
                     ID = member.DocumentationID,
                     Title = symbol.FullDisplayName,
+                    ContainingNamespaceID = symbol.Symbol.ContainingNamespace.GetDocumentationCommentId(),
                     TypeKind = HTMLRenderer.GetTypeName(symbol).ToLowerInvariant(),
                     ContainingTypeID = documentedSymbols.FirstOrDefault(s => symbol.ContainerID == s.DocumentationID)?.DocumentationID,
                     BaseTypeID = symbol.BaseTypeID,
