@@ -1,5 +1,9 @@
 {
     "omnisharp.useGlobalMono": "never",
     "omnisharp.useModernNet": true,
-    "dotnet.defaultSolution": "DocExtractor.sln"
+    "dotnet.defaultSolution": "DocExtractor.sln",
+    "files.associations": {
+        "*.yarnproject": "jsonc",
+        "**/specs/*.json": "jsonc"
+    }
 }
